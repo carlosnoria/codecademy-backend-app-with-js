@@ -18,6 +18,7 @@ let playerTwoMoveTwoValue;
 let playerTwoMoveThreeValue;
 
 let moveTypes = ['rock', 'paper', 'scissors'];
+let maxValueRange = 99;
 
 const verifyPlayerMovesTypes = (...playersMovesType) => {
     return playersMovesType.every(elem => moveTypes.includes(elem));
@@ -145,5 +146,25 @@ const getGameWinner = () => {
     }
 
     return playerOneScore > playerTwoScore ? 'Player One': 'Player Two';
+}
+
+const valuesRangeAvailable = (valuesArray, insuredRange) => {
+    let actualValuesRange = valuesArray.reduce((acum, elem) => acum + elem, 0);
+    return maxValueRange - insuredRange - actualValuesRange;
+}
+
+const setComputerMoves = () => {
+    let computerMovesTypes = [];
+    let computerMovesValues = [];
+
+    for (let i = 2; i >= 0; i--) {
+        computerMovesTypes.push(moveTypes[Math.floor(Math.random()*moveTypes.length)]);
+        computerMovesValues.push(Math.floor((Math.random()*valuesRangeAvailable(computerMovesValues, i))+1));
+    }
+
+    computerMovesValues[2] += valuesRangeAvailable(computerMovesValues, 0);
+
+    setPlayerMoves('Player Two', computerMovesTypes[0], computerMovesValues[0], computerMovesTypes[1], computerMovesValues[1], computerMovesTypes[2], computerMovesValues[2]);
+
 }
 
