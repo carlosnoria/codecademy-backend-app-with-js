@@ -19,30 +19,12 @@ let playerTwoMoveThreeValue;
 
 let moveTypes = ['rock', 'paper', 'scissors'];
 
-const verifyPlayerMovesTypes = (moveOneType, moveTwoType, moveThreeType) => {
-    if (!moveTypes.includes(moveOneType) || !moveTypes.includes(moveTwoType) 
-        || !moveTypes.includes(moveThreeType)){
-        return false;
-    }
-
-    return true;
+const verifyPlayerMovesTypes = (...playersMovesType) => {
+    return playersMovesType.every(elem => moveTypes.includes(elem));
 }
 
-const verifyPlayerMovesValues = (moveOneValue, moveTwoValue, moveThreeValue) => {
-    if (typeof moveOneValue != 'number' || typeof moveTwoValue != 'number' 
-        || typeof moveThreeValue != 'number'){
-        return false;
-    }
-
-    if(moveOneValue < 1 || moveTwoValue < 1 || moveThreeValue < 1){
-        return false;
-    }
-
-    if(moveOneValue + moveTwoValue + moveThreeValue > 99){
-        return false;
-    }
-
-    return true;
+const verifyPlayerMovesValues = (...playersMovesValue) => {
+    return playersMovesValue.every(elem => typeof elem === 'number' && elem > 0 && elem < 100);
 }
 
 const verifyRound = round => {
@@ -55,7 +37,11 @@ const setPlayerMoves = (player, moveOneType, moveOneValue, moveTwoType,
     if (!verifyPlayerMovesTypes(moveOneType, moveTwoType, moveThreeType) 
         || !verifyPlayerMovesValues(moveOneValue, moveTwoValue, moveThreeValue)){
         return;
-    } 
+    }
+
+    if (moveOneValue + moveTwoValue + moveThreeValue > 99) {
+        return;
+    }
 
     if (player === 'Player One') {
         playerOneMoveOneType = moveOneType;
@@ -74,9 +60,90 @@ const setPlayerMoves = (player, moveOneType, moveOneValue, moveTwoType,
     }
 }
 
+const checkRoundWinnerAux = (playerOneMoveType, playerOneMoveValue, 
+    playerTwoMoveType, playerTwoMoveValue) => {
+    if (!verifyPlayerMovesTypes(playerOneMoveType, playerTwoMoveType) 
+        || !verifyPlayerMovesValues(playerOneMoveValue, playerTwoMoveValue)) {
+        
+        return null; 
+    }
+
+    if (playerOneMoveType === playerTwoMoveType) {
+        if (playerOneMoveValue === playerTwoMoveValue) {
+            return 'Tie';
+        }else if (playerOneMoveValue > playerTwoMoveValue){
+            return 'Player One';
+        }else{
+            return 'Player Two';
+        }
+    }
+
+    switch (playerOneMoveType) {
+        case 'rock':
+            if (playerTwoMoveType === 'scissors') {
+                return 'Player One'
+            }else{
+                return 'Player Two'
+            }
+        case 'scissors':
+            if (playerTwoMoveType === 'paper') {
+                return 'Player One'
+            }else{
+                return 'Player Two'
+            }
+        case 'paper':
+            if (playerTwoMoveType === 'rock') {
+                return 'Player One'
+            }else{
+                return 'Player Two'
+            }
+    }
+
+}
+
 const getRoundWinner = round => {
     if (!verifyRound(round)){
         return null;
     }
+
+    switch(round){
+        case 1:
+            return checkRoundWinnerAux(playerOneMoveOneType, playerOneMoveOneValue, playerTwoMoveOneType, playerTwoMoveOneValue);
+        case 2:
+            return checkRoundWinnerAux(playerOneMoveTwoType, playerOneMoveTwoValue, playerTwoMoveTwoType, playerTwoMoveTwoValue);
+        case 3:
+            return checkRoundWinnerAux(playerOneMoveThreeType, playerOneMoveThreeValue, playerTwoMoveThreeType, playerTwoMoveThreeValue);
+    }
+}
+
+const getGameWinner = () => {
+    let roundResult;
+    let playerOneScore = 0;
+    let playerTwoScore = 0;
+    for (let i = 1; i < 4; i++){
+        roundResult = getRoundWinner(i);
+        if (roundResult === null){
+            return null;
+        }
+
+        switch (roundResult) {
+            case 'Player One':
+                playerOneScore++;
+                break;
+            case 'Player Two':
+                playerTwoScore++;
+                break;
+            case 'Tie':
+                playerOneScore++;
+                playerTwoScore++;
+                break;
+        }
+    }
+
+    if(playerOneScore === playerTwoScore){
+        return 'Tie';
+    }
+
+    return playerOneScore > playerTwoScore ? 'Player One': 'Player Two';
 }
 
