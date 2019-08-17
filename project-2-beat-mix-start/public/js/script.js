@@ -68,6 +68,24 @@ const invert = arrayName => {
     });
 }
 
+const getNeighborPads = (x, y, size) => {
+    const result = [];
+    if(x >= size || y >= size || size < 1 || x < 0 || y < 0){
+        return result;
+    }
+
+    result.push([x, y + 1]);
+    result.push([x, y - 1]);
+    result.push([x + 1, y]);
+    result.push([x - 1, y]);
+
+    return result.filter(elem => {
+        return elem.every(value => {
+            return value >= 0 && value < size; 
+        });
+    });
+}
+
 resetArray(kicks);
 resetArray(snares);
 resetArray(hiHats);

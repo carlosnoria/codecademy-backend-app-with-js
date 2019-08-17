@@ -7,7 +7,7 @@ const presetHandler = (method, index, arrayPreset) => {
         return [404];
     }
     
-    if(method != 'GET' || method != 'PUT'){
+    if(method != 'GET' && method != 'PUT'){
         return [400];
     }
 
@@ -15,7 +15,7 @@ const presetHandler = (method, index, arrayPreset) => {
 
     switch(method) {
         case 'PUT':
-            preset[index] = arrayPreset;
+            presets[index] = arrayPreset;
         case 'GET':
             result.push(presets[index]);
             break;
