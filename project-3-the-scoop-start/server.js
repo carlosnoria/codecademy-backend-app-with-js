@@ -2,7 +2,9 @@
 let database = {
   users: {},
   articles: {},
-  nextArticleId: 1
+  comments: {},
+  nextArticleId: 1,
+  nextCommentId: 1
 };
 
 const routes = {
@@ -26,6 +28,19 @@ const routes = {
   },
   '/articles/:id/downvote': {
     'PUT': downvoteArticle
+  },
+  '/comments': {
+    'POST': createComment
+  },
+  '/comments/:id': {
+    'PUT': updateComment,
+    'DELETE': deleteComment
+  },
+  '/comments/:id/upvote': {
+    'PUT': upvoteComment
+  },
+  '/comments/:id/downvote': {
+    'PUT': downvoteComment
   }
 };
 
@@ -241,9 +256,110 @@ function downvote(item, username) {
 }
 
 // Write all code above this line.
+function createComment(url, request) {
+  const requestComment = request.body && request.body.comment;
+  const response = {};
+
+  if (requestComment && requestComment.body && 
+    database.users[requestComment.username] && 
+    database.articles[requestComment.articleId]){
+      const comment = {
+        id: database.nextCommentId++,
+        body: requestComment.body,
+        username: requestComment.username,
+        articleId: requestComment.articleId,
+        upvotedBy: [],
+        downvotedBy: []
+      }
+
+      database.comments[comment.id] = comment;
+      database.users[comment.username].commentIds.push(comment.id)
+      database.articles[comment.articleId].commentIds.push(comment.id);
+
+      response.status = 201;
+      response.body = {comment: comment};
+  }else{
+    response.status = 400;
+  }
+
+  return response;
+}
+
+function updateComment(url, request){
+  const id = Number(url.split('/').filter(segment => segment)[1]);
+  const savedComment = database.comments[id];
+  const requestComment = request.body && request.body.comment;
+  const response = {};
+
+  if (!id || !requestComment) {
+    response.status = 400;
+  }else if (!savedComment) {
+    response.status = 404;
+  }else{
+    savedComment.body = requestComment.body || savedComment.body;
+
+    response.status = 200;
+    response.body = {comment: savedComment};
+  }
+  
+  return response;
+}
+
+function deleteComment(url, request){
+  const id = Number(url.split('/').filter(segment => segment)[1]);
+  const savedComment = database.comments[id];
+  const response = {};
+  if(!id || !savedComment) {
+    response.status = 404;
+  }else{
+    database.comments[id] = null;
+    const userCommentIds = database.users[savedComment.username].commentIds;
+    userCommentIds.splice(userCommentIds.indexOf(id), 1);
+    const articleCommentIds = database.articles[savedComment.articleId].commentIds;
+    articleCommentIds.splice(articleCommentIds.indexOf(id), 1);
+    response.status = 204;
+  }
+  
+  return response;
+}
+
+function upvoteComment(url, request){
+  const id = Number(url.split('/').filter(segment=>segment)[1]);
+  const requestUsername = request.body && request.body.username;
+  const savedComment = database.comments[id];
+  const response = {};
+  if(!id || !savedComment || !requestUsername || !database.users[requestUsername]){
+    response.status = 400;
+  }else{
+    const comment = upvote(savedComment, requestUsername);
+    response.status = 200;
+    response.body = {comment}
+  }
+
+  return response;
+}
+
+function downvoteComment(url, request){
+  const id = Number(url.split('/').filter(segment=>segment)[1]);
+  const requestUsername = request.body && request.body.username;
+  const savedComment = database.comments[id];
+  const response = {};
+  if(!id || !savedComment || !requestUsername || !database.users[requestUsername]){
+    response.status = 400;
+  }else{
+    const comment = downvote(savedComment, requestUsername);
+    response.status = 200;
+    response.body = {comment}
+  }
+
+  return response;
+}
 
 const http = require('http');
 const url = require('url');
+const Figg = require("figg");
+const config = new Figg();
+const fs = require('fs');
 
 const port = process.env.PORT || 4000;
 const isTestMode = process.env.IS_TEST_MODE;
@@ -278,6 +394,8 @@ const requestHandler = (request, response) => {
     const methodResponse = routes[route][method].call(null, url);
     !isTestMode && (typeof saveDatabase === 'function') && saveDatabase();
 
+    config.set(database);
+    config.save();
     response.statusCode = methodResponse.status;
     response.end(JSON.stringify(methodResponse.body) || '');
   } else {
@@ -289,7 +407,8 @@ const requestHandler = (request, response) => {
       const jsonRequest = {body: body};
       const methodResponse = routes[route][method].call(null, url, jsonRequest);
       !isTestMode && (typeof saveDatabase === 'function') && saveDatabase();
-
+      config.set(database);
+      config.save();
       response.statusCode = methodResponse.status;
       response.end(JSON.stringify(methodResponse.body) || '');
     });
@@ -319,6 +438,32 @@ if (typeof loadDatabase === 'function' && !isTestMode) {
   }
 }
 
+function fileExist(filePath) {
+  return new Promise((resolve, reject) => {
+    fs.access(filePath, fs.F_OK, (err) => {
+      if (err) {
+        return reject(err);
+      }
+      //file exists
+      resolve();
+    })
+  });
+}
+
+const path = './config.yml';
+const loadUserDatabase = async () => {
+  try{
+    console.log("Loading Database.");
+    let existFlag = await fileExist(path);
+    database = config.load();
+    console.log('Database loaded!');
+  }catch(err){
+    console.log('File not found!');
+  }
+}
+
+
+
 const server = http.createServer(requestHandler);
 
 server.listen(port, (err) => {
@@ -327,4 +472,5 @@ server.listen(port, (err) => {
   }
 
   console.log(`Server is listening on ${port}`);
+  loadUserDatabase();
 });

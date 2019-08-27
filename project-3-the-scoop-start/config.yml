@@ -1,0 +1,19 @@
+users:
+  nucinm:
+    username: nucinm
+    articleIds:
+      - 1
+    commentIds: []
+articles:
+  '1':
+    id: 1
+    title: sdasdasd
+    url: asdasdasd
+    username: nucinm
+    commentIds: []
+    upvotedBy: []
+    downvotedBy:
+      - nucinm
+comments: {}
+nextArticleId: 2
+nextCommentId: 1
