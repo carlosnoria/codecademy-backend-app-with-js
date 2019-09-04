@@ -450,11 +450,10 @@ function fileExist(filePath) {
   });
 }
 
-const path = './config.yml';
 const loadUserDatabase = async () => {
   try{
     console.log("Loading Database.");
-    let existFlag = await fileExist(path);
+    let existFlag = await fileExist('./config.yml');
     database = config.load();
     console.log('Database loaded!');
   }catch(err){
