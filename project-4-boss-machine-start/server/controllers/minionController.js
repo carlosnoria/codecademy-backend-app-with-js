@@ -1,9 +1,8 @@
 const db = require('../db');
-const boom = require('@hapi/boom');
 const utils = require('../utils');
 
 const attachMinionToRequest = (req, res, next, minionId) => {
-    utils.attachInstanceToRequest(req, res, next, minionId, 'minions');
+    utils.attachInstanceToRequest(req, res, next, minionId, 'minions', 'minionId');
 };
 
 const getMinions = (req, res, next) => {
@@ -23,7 +22,7 @@ const editMinion = (req, res, next) => {
 };
 
 const deleteMinion = (req, res, next) => {
-    utils.deleteInstance(req, res, next, 'minions');
+    utils.deleteInstance(req, res, next, 'minions', 'minionId');
 };
 
 module.exports = {

@@ -1,7 +1,7 @@
 const db = require('../db');
 const boom = require('@hapi/boom');
 
-const attachInstanceToRequest = (req, res, next, instanceId, model) => {
+const attachInstanceToRequest = (req, res, next, instanceId, model, field = 'instanceId') => {
     const instance = db.getFromDatabaseById(model, instanceId);
     if (!instance || instance === null) {
         const {output: {statusCode, payload}} = boom.notFound();
@@ -9,7 +9,7 @@ const attachInstanceToRequest = (req, res, next, instanceId, model) => {
     }
 
     req.instance = instance;
-    req.instanceId = instanceId;
+    req[field] = instanceId;
     next(); 
 };
 
@@ -28,7 +28,7 @@ const addInstance = (req, res, next, model) => {
         return res.status(statusCode).json(payload);
     }
 
-    res.json(newInstance);
+    res.status(201).json(newInstance);
 };
 
 const editInstance = (req, res, next, model) => {
@@ -41,8 +41,8 @@ const editInstance = (req, res, next, model) => {
     res.json(editedInstance);
 };
 
-const deleteInstance = (req, res, next, model) => {
-    const deleteResult = db.deleteFromDatabasebyId(model, req.instanceId);
+const deleteInstance = (req, res, next, model, field='instanceId') => {
+    const deleteResult = db.deleteFromDatabasebyId(model, req[field]);
     if (deleteResult) {
         return res.status(204).send();
     } else {
@@ -51,11 +51,24 @@ const deleteInstance = (req, res, next, model) => {
     }
 }
 
+const attachWorkToRequest = (req, res, next, workId) => {
+    const work = db.getWorkByIdAndMinionId(req.minionId, workId);
+    if(!work) {
+        const {output: {statusCode, payload}} = boom.badRequest();
+        return res.status(statusCode).json(payload);
+    }
+
+    req.work = work;
+    req.workId = workId;
+    next();
+};
+
 module.exports = {
     getInstances,
     attachInstanceToRequest,
     getInstanceById,
     addInstance,
     editInstance,
-    deleteInstance
+    deleteInstance,
+    attachWorkToRequest
 };

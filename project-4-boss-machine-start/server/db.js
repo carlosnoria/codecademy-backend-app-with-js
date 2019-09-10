@@ -263,6 +263,19 @@ const deleteAllFromDatabase = (modelType) => {
   return model.data;
 }
 
+const getAllWorksByMinionId = (minionId) => {
+  console.log(allWork.length);
+  return allWork.filter(work => work.minionId === minionId);
+};
+
+const updateWorkInDatabase = (instance) => {
+
+};
+
+const getWorkByIdAndMinionId = (minionId, workId) => {
+  return allWork.find(work => work.id === workId && work.minionId === minionId);
+};
+
 module.exports = {
   createMeeting,
   getAllFromDatabase,
@@ -271,4 +284,7 @@ module.exports = {
   updateInstanceInDatabase,
   deleteFromDatabasebyId,
   deleteAllFromDatabase,
+  getAllWorksByMinionId,
+  updateWorkInDatabase,
+  getWorkByIdAndMinionId
 };
