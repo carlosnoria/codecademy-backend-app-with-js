@@ -39,7 +39,7 @@ employeeRouter.post('/', (req, res, next) => {
         isCurrentlyEmployed = 1;
     }
 
-    if (!name || !position || !wage) {
+    if (!verifyEmployeeRequiredFields(name, position, wage)) {
         return res.sendStatus(400);
     }
 
@@ -69,6 +69,72 @@ employeeRouter.get('/:employeeId', (req, res, next) => {
     res.json({employee: req.employee});
 });
 
+employeeRouter.put('/:employeeId', (req, res, next) => {
+    const body = req.body.employee;
+    const name = body.name;
+    const position = body.position;
+    const wage = body.wage;
+    let isCurrentlyEmployed;
+    if (body.is_current_employee) {
+        isCurrentlyEmployed = body.is_current_employee;
+    } else {
+        isCurrentlyEmployed = 1;
+    }
+
+    if (!verifyEmployeeRequiredFields(name, position, wage)) {
+        return res.sendStatus(400);
+    }
+
+    const sql = `UPDATE Employee 
+                SET name = $name, position = $position, wage = $wage, is_current_employee = $isCurrentlyEmployed
+                WHERE id = $employeeId;`;
+    const values = {
+        $isCurrentlyEmployed: isCurrentlyEmployed,
+        $name: name,
+        $position: position,
+        $wage: wage,
+        $employeeId: req.employee.id
+    };
+
+    db.run(sql, values, (err) => {
+        if(err) {
+            next(err);
+        } else {
+            db.get(`SELECT * FROM Employee WHERE id = ${req.employee.id};`, (err, employee) => {
+                if(err) {
+                    next(err);
+                }else {
+                    res.json({employee});
+                }
+            });
+        }
+    });
+
+});
+
+employeeRouter.delete('/:employeeId', (req, res, next) => {
+    const sql = `UPDATE Employee SET is_current_employee = 0 WHERE id = ${req.employee.id};`;
+    db.run(sql, (err) => {
+        if(err) {
+            next(err);
+        } else {
+            db.get(`SELECT * FROM Employee WHERE id = ${req.employee.id};`, (err, employee) => {
+                if(err) {
+                    next(err);
+                } else {
+                    res.json({employee});
+                }
+            });
+        }
+    })
+});
+
+const verifyEmployeeRequiredFields = (name, position, wage) => {
+    if (!name || !position || !wage) {
+        return false;
+    }
+    return true;
+}
 
 
 
