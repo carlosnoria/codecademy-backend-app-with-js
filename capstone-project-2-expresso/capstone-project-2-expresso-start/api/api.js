@@ -1,7 +1,8 @@
 const router = require('express').Router();
 const employeeRouter = require('./employee');
-const timesheetRouter = require('./timesheet');
+const menuRouter = require('./menu');
 
 router.use('/employees', employeeRouter);
+router.use('/menus', menuRouter);
 
 module.exports = router;
